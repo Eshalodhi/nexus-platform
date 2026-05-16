@@ -8,6 +8,16 @@ A modern investor & entrepreneur collaboration platform built with React, TypeSc
 - Add / modify availability slots
 - Send / accept / decline meeting requests
 - Confirmed meetings displayed on dashboard
+- 
+✅ Week 2 — Video Calling & Documents
+- Video call UI with real camera/mic using WebRTC
+- Start / End call, audio & video toggle
+- Screen share
+- Document Chamber for deals & contracts
+- PDF upload & preview
+- E-signature pad
+- Document status labels (Draft / In Review / Signed)
+- Share documents with other users
 
 ## 🛠️ Tech Stack
 - React 18 + TypeScript
