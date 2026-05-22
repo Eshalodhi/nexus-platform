@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
@@ -27,6 +26,7 @@ import { SettingsPage } from './pages/settings/SettingsPage';
 import { HelpPage } from './pages/help/HelpPage';
 import { DealsPage } from './pages/deals/DealsPage';
 import VideoCallPage from './pages/videocall/VideoCallPage';
+import PaymentsPage from './pages/payments/PaymentsPage';
 
 // Chat Pages
 import { ChatPage } from './pages/chat/ChatPage';
@@ -102,6 +102,11 @@ function App() {
           {/* video call route */}
           <Route path="/videocall" element={<DashboardLayout />}>
             <Route index element={<VideoCallPage />} />
+          </Route>
+
+          {/* Payment route */}
+          <Route path="/payments" element={<DashboardLayout />}>
+            <Route index element={<PaymentsPage />} />
           </Route>
 
           {/* Redirect root to login */}

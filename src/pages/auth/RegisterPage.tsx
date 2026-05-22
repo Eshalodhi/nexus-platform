@@ -6,6 +6,21 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { UserRole } from '../../types';
 
+// Password strength checker
+const getPasswordStrength = (password: string) => {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score === 0) return { label: '', color: '', width: '0%' };
+  if (score === 1) return { label: 'Weak', color: 'bg-red-500', width: '25%' };
+  if (score === 2) return { label: 'Fair', color: 'bg-amber-500', width: '50%' };
+  if (score === 3) return { label: 'Good', color: 'bg-blue-500', width: '75%' };
+  return { label: 'Strong', color: 'bg-green-500', width: '100%' };
+};
+
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -14,32 +29,37 @@ export const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<UserRole>('entrepreneur');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { register } = useAuth();
   const navigate = useNavigate();
-  
+
+  const strength = getPasswordStrength(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
-    // Validate passwords match
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    
+
+    if (strength.label === 'Weak') {
+      setError('Please choose a stronger password');
+      return;
+    }
+
     setIsLoading(true);
-    
+
     try {
       await register(name, email, password, role);
-      // Redirect based on user role
       navigate(role === 'entrepreneur' ? '/dashboard/entrepreneur' : '/dashboard/investor');
     } catch (err) {
       setError((err as Error).message);
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -62,13 +82,14 @@ export const RegisterPage: React.FC = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {error && (
-            <div className="mb-4 bg-error-50 border border-error-500 text-error-700 px-4 py-3 rounded-md flex items-start">
-              <AlertCircle size={18} className="mr-2 mt-0.5" />
-              <span>{error}</span>
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start">
+              <AlertCircle size={18} className="mr-2 mt-0.5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Role Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 I am registering as a
@@ -86,7 +107,6 @@ export const RegisterPage: React.FC = () => {
                   <Building2 size={18} className="mr-2" />
                   Entrepreneur
                 </button>
-                
                 <button
                   type="button"
                   className={`py-3 px-4 border rounded-md flex items-center justify-center transition-colors ${
@@ -101,7 +121,7 @@ export const RegisterPage: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             <Input
               label="Full name"
               type="text"
@@ -111,7 +131,7 @@ export const RegisterPage: React.FC = () => {
               fullWidth
               startAdornment={<User size={18} />}
             />
-            
+
             <Input
               label="Email address"
               type="email"
@@ -121,17 +141,60 @@ export const RegisterPage: React.FC = () => {
               fullWidth
               startAdornment={<Mail size={18} />}
             />
-            
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              fullWidth
-              startAdornment={<Lock size={18} />}
-            />
-            
+
+            {/* Password with strength meter */}
+            <div>
+              <Input
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                fullWidth
+                startAdornment={<Lock size={18} />}
+              />
+              {/* Strength Bar */}
+              {password && (
+                <div className="mt-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs text-gray-500">Password strength</span>
+                    <span className={`text-xs font-medium ${
+                      strength.label === 'Weak' ? 'text-red-500' :
+                      strength.label === 'Fair' ? 'text-amber-500' :
+                      strength.label === 'Good' ? 'text-blue-500' :
+                      'text-green-500'
+                    }`}>
+                      {strength.label}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
+                      style={{ width: strength.width }}
+                    />
+                  </div>
+                  {/* Requirements */}
+                  <div className="mt-2 grid grid-cols-2 gap-1">
+                    {[
+                      { label: '8+ characters', met: password.length >= 8 },
+                      { label: 'Uppercase letter', met: /[A-Z]/.test(password) },
+                      { label: 'Number', met: /[0-9]/.test(password) },
+                      { label: 'Special character', met: /[^A-Za-z0-9]/.test(password) },
+                    ].map(req => (
+                      <div key={req.label} className="flex items-center gap-1">
+                        <span className={`text-xs ${req.met ? 'text-green-500' : 'text-gray-400'}`}>
+                          {req.met ? '✓' : '○'}
+                        </span>
+                        <span className={`text-xs ${req.met ? 'text-green-600' : 'text-gray-400'}`}>
+                          {req.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Input
               label="Confirm password"
               type="password"
@@ -141,7 +204,16 @@ export const RegisterPage: React.FC = () => {
               fullWidth
               startAdornment={<Lock size={18} />}
             />
-            
+
+            {/* Passwords match indicator */}
+            {confirmPassword && (
+              <p className={`text-xs mt-1 ${
+                password === confirmPassword ? 'text-green-500' : 'text-red-500'
+              }`}>
+                {password === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
+              </p>
+            )}
+
             <div className="flex items-center">
               <input
                 id="terms"
@@ -161,7 +233,7 @@ export const RegisterPage: React.FC = () => {
                 </a>
               </label>
             </div>
-            
+
             <Button
               type="submit"
               fullWidth
@@ -170,7 +242,7 @@ export const RegisterPage: React.FC = () => {
               Create account
             </Button>
           </form>
-          
+
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -180,7 +252,6 @@ export const RegisterPage: React.FC = () => {
                 <span className="px-2 bg-white text-gray-500">Or</span>
               </div>
             </div>
-            
             <div className="mt-2 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
